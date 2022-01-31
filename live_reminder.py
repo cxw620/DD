@@ -1,7 +1,7 @@
-# coding:utf-8
-# 简简单单的DD程序, 借助腾讯云云函数执行.
+# -*- coding: utf8 -*-
+# 简简单单的DD程序, 基于腾讯云云函数
 # 作者: 闻君心
-# 20220131
+# 20220131 1931 测试完毕.
 
 
 import requests
@@ -19,8 +19,8 @@ ids = ["6461515", "22341433"]
 bili_live_api = "api.bilibili.com/x/space/acc/info"
 bili_live_api_add = "api.live.bilibili.com/room/v1/Room/room_init"
 
-# pushplus的token. Line85请同步填上默认token.
-push_plus_token = ""
+# pushplus的token
+push_plus_token = "63b0cdd297b1448aa39adf6007e58239"
 
 # 随机UA
 UA = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.100.4758.11 Safari/537.36",
@@ -30,7 +30,15 @@ headers_rad = {
     "User-Agent": random.sample(UA, 1)[0], 'Content-Type': 'application/json'}
 
 
+def timeGet():
+    _nowTimeStamp = int(time.time())
+    _nowTimeArray = time.localtime(_nowTimeStamp)
+    _nowTime = time.strftime("%Y年%m月%d日 %H:%M:%S", _nowTimeArray)
+    return _nowTime
+
+
 def bili_gain(__mid__, __id__, __bili_live_api__, __bili_live_api_add__, __push_plus_token__=push_plus_token, __headers__=headers_rad, usehttps=False):
+
     if usehttps:
         __bili_live_api__ = "https://" + __bili_live_api__
         __bili_live_api_add__ = "https://" + __bili_live_api_add__
@@ -82,7 +90,7 @@ def bili_gain(__mid__, __id__, __bili_live_api__, __bili_live_api_add__, __push_
         return name, push_content
 
 
-def push(__title__='ERROR: 系统通知', __content__="程序错误, 请排查.", __group__="10001", __token__=""):
+def push(__title__='ERROR: 系统通知', __content__="程序错误, 请排查.", __group__="10001", __token__="63b0cdd297b1448aa39adf6007e58239"):
     push_api = "http://pushplus.hxtrip.com/send"
     __push_data__ = {
         "token": __token__,
@@ -109,21 +117,32 @@ def cvcover(url, headers):
     return result
 
 
-# ------------------程序主体----------------------------
-# 消息发送队列, 第一个是up主的名字, 第二个是内容, json格式.
-push_q_name = []
-push_q_content = {}
-if len(ids) != len(mids):
-    mids = ["107609241", "378606811"]
-    ids = ["6461515", "22341433"]
-    q_length = 2
-else:
-    q_length = len(mids)
-for i in range(q_length):
-    bili_res = bili_gain(mids[i], ids[i], bili_live_api, bili_live_api_add)
-    if bili_res:
-        push_q_name.append(bili_res[0])
-        push_q_content = bili_res[1] + "<br>" + push_q_content
-if push_q_name and push_q_content:
-    push_q_name_total = ''.join(str(i) for i in push_q_name) + "正在直播!"
-    push(push_q_name_total, push_q_content)
+def main_handler(event, context, _ids=ids, _mids=mids):
+    # ------------------程序主体----------------------------
+    # 消息发送队列, 第一个是up主的名字, 第二个是内容, json格式.
+    print(event["Time"] + " 开始执行自动任务")
+    push_q_name = []
+    push_q_content = event["Time"]
+    if len(_ids) != len(_mids):
+        _mids = ["107609241", "378606811"]
+        _ids = ["6461515", "22341433"]
+        q_length = 2
+        _time = timeGet()
+        print(_time + " 提供的UUID和直播间ID不匹配. 将使用默认值")
+    else:
+        q_length = len(_mids)
+    for i in range(q_length):
+        bili_res = bili_gain(
+            _mids[i], _ids[i], bili_live_api, bili_live_api_add)
+        if bili_res:
+            push_q_name.append(bili_res[0])
+            push_q_content = bili_res[1] + "<br>" + push_q_content
+    if push_q_name and push_q_content:
+        push_q_name_total = ''.join(str(i) for i in push_q_name) + "正在直播!"
+        push_code = push(push_q_name_total, push_q_content)
+        _time = timeGet()
+        print(_time + " Push Plus推送网页代码: " + push_code)
+    # for test only
+    # _time = timeGet()
+    # print(push_q_content)
+    # push("TEST Serverless", push_q_content)
