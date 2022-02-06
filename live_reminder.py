@@ -23,7 +23,7 @@ bili_live_api = "api.bilibili.com/x/space/acc/info"
 bili_live_api_add = "api.live.bilibili.com/room/v1/Room/room_init"
 
 # pushplus的token
-push_plus_token = "63b0cdd297b1448aa39adf6007e58239"
+push_plus_token = ""
 
 # 随机UA
 UA = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.100.4758.11 Safari/537.36",
@@ -128,7 +128,7 @@ def bili_gain(__mid__, __id__, __bili_live_api__, __bili_live_api_add__, __retry
             return name, push_content, tempRetryCount
 
 
-def push(__title__='ERROR: 系统通知', __content__="程序错误, 请排查.", __group__="10001", __token__="63b0cdd297b1448aa39adf6007e58239"):
+def push(__title__='ERROR: 系统通知', __content__="程序错误, 请排查.", __group__="10001", __token__=""):
     push_api = "http://pushplus.hxtrip.com/send"
     __push_data__ = {
         "token": __token__,
